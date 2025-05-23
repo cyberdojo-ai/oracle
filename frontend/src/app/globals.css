@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6fff8; /* Soft green */
+  --foreground: #234e23; /* Dark green for text */
+  --card-bg: #ffffff; /* White for cards/panels */
+  --primary: #38b000; /* Green accent */
+  --border: #d3e4cd; /* Light cream border */
+  --input-bg: #fff;
+  --input-border: #d3e4cd;
+  --input-text: #234e23;
+  --input-placeholder: #7ca982;
+  --scrollbar-width: 16px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  /* overflow-y: scroll; removed to only show scrollbar when needed */
+  scrollbar-width: thin;
+  scrollbar-color: #7be495 #e6f9f5;
+}
+
+/* Scrollbar styling for WebKit browsers */
+::-webkit-scrollbar {
+  width: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: #7be495; /* Lighter green */
+  border-radius: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #e6f9f5; /* Slightly more visible track */
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 var(--border);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid var(--primary);
+}
+
+input, textarea, select {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+}
+
+input::placeholder {
+  color: var(--input-placeholder);
+}
+
+@media (min-width: 640px) {
+  .scrollbar-placeholder {
+    padding-right: var(--scrollbar-width);
+  }
+}

@@ -341,3 +341,4 @@ pyrightconfig.json
 ### vscode ###
 .vscod*
 
+node_modules/
