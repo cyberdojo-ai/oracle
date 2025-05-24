@@ -119,6 +119,15 @@ async def async_base_create_source(db: AsyncSession, source: schemas.SourceCreat
     await db.commit()
     return db_source
 
+### Source Embedding ###
+async def async_base_create_source_embedding(
+    db: AsyncSession, source_embedding: schemas.SourceEmbeddingCreate
+) -> models.SourceEmbedding:
+    db_source_embedding = models.SourceEmbedding(**source_embedding.model_dump())
+    db.add(db_source_embedding)
+    await db.commit()
+    return db_source_embedding
+
 ### Read/Write operations ###
 
 ### Delete operations ###

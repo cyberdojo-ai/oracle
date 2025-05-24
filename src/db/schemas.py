@@ -27,6 +27,7 @@ class EnrichmentJob(EnrichmentJobBase):
 
 class SourceBase(BaseModel):
     title: str
+    type: str
     url: Optional[str] = None
     content: Optional[str] = None
     fetched_on: Optional[datetime.datetime | None] = None
@@ -39,13 +40,32 @@ class SourceCreate(SourceBase):
 
 class SourceUpdate(BaseModel):
     title: Optional[str] = None
+    type: Optional[str] = None
     url: Optional[str] = None
     content: Optional[str] = None
     fetched_on: Optional[datetime.datetime | None] = None
+    published_on: Optional[datetime.date | None] = None
+    updated_on: Optional[datetime.datetime | None] = None
 
 class Source(SourceBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+
+class SourceEmbeddingBase(BaseModel):
+    source_id: int
+    chunk: str
+    embedding: List[float]
+
+class SourceEmbeddingCreate(SourceEmbeddingBase):
+    pass
+class SourceEmbeddingUpdate(BaseModel):
+    chunk: Optional[str] = None
+    embedding: Optional[List[float]] = None
+
+class SourceEmbedding(SourceEmbeddingBase):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    source: Source
 
 class IOCBase(BaseModel):
     value: str

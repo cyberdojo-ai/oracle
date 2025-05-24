@@ -1,3 +1,4 @@
+import re
 import httpx
 from bs4 import BeautifulSoup
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,15 +7,17 @@ from datetime import date, datetime
 
 from src.db.database import SessionLocal
 from src import utils
+from src.utils.embeddings import async_chunk_and_embed_list
 from src.db import crud, schemas
 from src.cron import Event
-import re
 
 
 class SansEduScraper:
     """
     Basic web scraper for https://isc.sans.edu/diaryarchive.html using httpx and BeautifulSoup.
     """
+
+    source_type = "Sans - Internet Storm Center"
 
     def __init__(
         self,
@@ -102,6 +105,7 @@ class SansEduScraper:
                     updated_on = None
 
                 self.sources.append(schemas.SourceCreate(
+                    type=self.source_type,
                     title=title,
                     url=url,
                     content=content,
@@ -145,6 +149,33 @@ class SansEduScraper:
         sources = await self.fetch_sources(urls)
         print(f"Fetched {len(sources)} urls.")
 
+async def persist_sources(
+    db_session: AsyncSession,
+    enrichment_job_id: int,
+    sources: list[schemas.SourceCreate],
+
+):
+    if not sources:
+        print("No sources to persist.")
+        return
+    print(f"Persisting {len(sources)} sources to the database.")
+
+    embeddings = await async_chunk_and_embed_list(
+        [source.content for source in sources]
+    )
+    for source, embedding_chunks in zip(sources, embeddings):
+        source.enrichment_job_id = enrichment_job_id
+        db_source = await crud.async_base_create_source(db_session, source)
+        for chunk in embedding_chunks:
+            await crud.async_base_create_source_embedding(
+                db_session,
+                schemas.SourceEmbeddingCreate(
+                    source_id=db_source.id,
+                    chunk=chunk.chunk,
+                    embedding=chunk.embedding,
+                ),
+            )
+
 async def enrichment_job_async(
     name: str,
     description: str,
@@ -185,10 +216,11 @@ async def enrichment_job_async(
             if not sources:
                 print("No new sources found.")
             else:
-                # Create sources in the database
-                for source in sources:
-                    source.enrichment_job_id = db_job.id
-                    await crud.async_base_create_source(db_session, source)
+                await persist_sources(
+                    db_session,
+                    enrichment_job_id=db_job.id,
+                    sources=sources,
+                )
 
     if last_year:
         for i in range(1, 13):
@@ -204,10 +236,11 @@ async def enrichment_job_async(
             if not sources:
                 print("No new sources found.")
             else:
-                # Create sources in the database
-                for source in sources:
-                    source.enrichment_job_id = db_job.id
-                    await crud.async_base_create_source(db_session, source)
+                await persist_sources(
+                    db_session,
+                    enrichment_job_id=db_job.id,
+                    sources=sources,
+                )
 
     if this_month:
         sans_scraper = SansEduScraper(
@@ -223,10 +256,11 @@ async def enrichment_job_async(
         if not sources:
             print("No new sources found.")
         else:
-            # Create sources in the database
-            for source in sources:
-                source.enrichment_job_id = db_job.id
-                await crud.async_base_create_source(db_session, source)
+            await persist_sources(
+                db_session,
+                enrichment_job_id=db_job.id,
+                sources=sources,
+            )
 
     if last_month:
         query_params = {
@@ -242,10 +276,11 @@ async def enrichment_job_async(
         if not sources:
             print("No new sources found.")
         else:
-            # Create sources in the database
-            for source in sources:
-                source.enrichment_job_id = db_job.id
-                await crud.async_base_create_source(db_session, source)
+            await persist_sources(
+                db_session,
+                enrichment_job_id=db_job.id,
+                sources=sources,
+            )
 
     db_job = await crud.async_base_update_enrichment_job(
         db_session,

@@ -26,6 +26,8 @@ class Config(BaseSettings):
     pg_pool_size: int = 20
     pg_max_overflow: int = 40
 
+    openai_api_key: str = ""
+
     environment: Literal["development", "testing", "staging", "production"] = "development"
 
     enable_database_telemetry: bool = False

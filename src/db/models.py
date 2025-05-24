@@ -1,6 +1,7 @@
 import enum
-from sqlalchemy import Column, ForeignKey, Integer, String, Enum, DateTime, Text, Date
+from sqlalchemy import Column, ForeignKey, Integer, String, Enum, DateTime, Text, Date, Index
 from sqlalchemy.dialects.postgresql import ARRAY
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -25,11 +26,32 @@ class IOC(Base):
 
     source = relationship("Source", back_populates="iocs")
 
+class SourceEmbedding(Base):
+    __tablename__ = "source_embeddings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    source_id = Column(Integer, ForeignKey("sources.id"), nullable=False)
+
+    chunk = Column(Text, nullable=False)
+    embedding = Column(Vector(1536), nullable=False)
+    
+    source = relationship("Source")
+
+Index(
+    "sources_embedding_idx",
+    SourceEmbedding.embedding,
+    postgresql_using="hnsw",
+    postgresql_ops={"embedding": "public.vector_cosine_ops"},
+    postgresql_with={"m": "16", "ef_construction": "200"}
+)
+
 class Source(Base):
     __tablename__ = "sources"
 
     id = Column(Integer, primary_key=True, index=True)
     enrichment_job_id = Column(Integer, ForeignKey("enrichment_jobs.id"))
+
+    type = Column(String, nullable=False, index=True)
 
     title = Column(String, nullable=False)
     url = Column(String, nullable=False, index=True)

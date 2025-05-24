@@ -33,6 +33,8 @@ psycopg = "^3.2.9"
 fastapi = "^0.115.12"
 bs4 = "^0.0.2"
 alembic = "^1.15.2"
+openai = "^1.82.0"
+pgvector = "^0.4.1"
 
 [tool.poetry.group.test]
 optional = true
