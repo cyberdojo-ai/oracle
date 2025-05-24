@@ -1,12 +1,13 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
-import SourcePreview, { SourcePreviewProps } from "./SourcePreview";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { SourcePreviewProps } from "./SourcePreview";
 import SourcesGrid from "./SourcesGrid";
 import SourcesList from "./SourcesList";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 
 const PAGE_SIZE = 9;
-const API_URL = "http://localhost:8000/api/source";
+const API_URL = "/api/source";
 
 const SourcesView: React.FC = () => {
   const [sources, setSources] = useState<SourcePreviewProps[]>([]);
@@ -18,7 +19,6 @@ const SourcesView: React.FC = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>("grid");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   // Debounce search input
@@ -38,7 +38,7 @@ const SourcesView: React.FC = () => {
   useEffect(() => {
     const urlSearch = searchParams.get("search") || "";
     setSearch(urlSearch);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -52,7 +52,7 @@ const SourcesView: React.FC = () => {
   }, [search]);
 
   // Helper to build API params based on backend API
-  const buildApiParams = () => {
+  const buildApiParams = useCallback(() => {
     const params = new URLSearchParams({
       limit: PAGE_SIZE.toString(),
       offset: ((page - 1) * PAGE_SIZE).toString(),
@@ -64,10 +64,11 @@ const SourcesView: React.FC = () => {
       params.append("content_like", debouncedSearch);
     }
     return params;
-  };
+  }, [page, debouncedSearch]);
 
   useEffect(() => {
     setLoading(true);
+    setError(null); // Clear error on new request
     const params = buildApiParams();
     fetch(`${API_URL}?${params.toString()}`)
       .then((res) => {
@@ -82,7 +83,7 @@ const SourcesView: React.FC = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, debouncedSearch]);
+  }, [page, debouncedSearch, buildApiParams]);
 
   useEffect(() => {
     const params = buildApiParams();
@@ -93,7 +94,34 @@ const SourcesView: React.FC = () => {
       })
       .then((data) => setTotal(data.count || 0))
       .catch(() => setTotal(0));
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, page, buildApiParams]);
+
+  // Refetch handler
+  const handleRefetch = () => {
+    setLoading(true);
+    setError(null);
+    const params = buildApiParams();
+    fetch(`${API_URL}?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch sources");
+        return res.json();
+      })
+      .then((data) => {
+        setSources(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+    fetch(`${API_URL}/count?${params.toString()}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch source count");
+        return res.json();
+      })
+      .then((data) => setTotal(data.count || 0))
+      .catch(() => setTotal(0));
+  };
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -137,6 +165,17 @@ const SourcesView: React.FC = () => {
               <span className={viewMode === 'list' ? 'text-white' : 'text-[var(--primary)]'} style={{transition: 'color 0.2s'}}>List</span>
             </span>
           </div>
+          {/* Refetch Button */}
+          <button
+            onClick={handleRefetch}
+            className="ml-2 p-2 rounded-full border border-[var(--primary)] bg-[var(--card-bg)] hover:bg-[var(--primary)] hover:text-white transition-colors flex items-center justify-center"
+            title="Refresh"
+            aria-label="Refresh"
+            disabled={loading}
+            style={{ lineHeight: 0 }}
+          >
+            <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
       </div>
       {viewMode === 'grid' ? (
