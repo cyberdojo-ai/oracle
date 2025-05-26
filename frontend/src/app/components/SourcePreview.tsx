@@ -7,6 +7,7 @@ export interface SourcePreviewProps {
   content?: string;
   published_on?: string;
   updated_on?: string;
+  type?: string;
 }
 
 const getFirst5Lines = (content?: string) => {
@@ -25,6 +26,7 @@ const SourcePreview: React.FC<SourcePreviewProps> = ({
   content,
   published_on,
   updated_on,
+  type,
 }) => {
   const { preview, isTruncated } = getFirst5Lines(content);
   return (
@@ -45,6 +47,11 @@ const SourcePreview: React.FC<SourcePreviewProps> = ({
       >
         {title}
       </a>
+      {type && (
+        <div className="text-xs font-semibold mb-1" style={{ color: 'var(--primary)' }}>
+          {type}
+        </div>
+      )}
       <div className="text-xs mb-1" style={{ color: '#7ca982' }}>
         <span>
           Published: {published_on ? new Date(published_on).toLocaleDateString() : "-"}
