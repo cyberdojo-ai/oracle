@@ -109,7 +109,7 @@ async def async_similarity_search_source_embedding(
         models.SourceEmbedding,
         models.SourceEmbedding.embedding.cosine_distance(query_embedding).label("distance")
     )
-    stmt = stmt.order_by(desc("distance"))
+    stmt = stmt.order_by(asc("distance"))
     if limit > 0:
         stmt = stmt.limit(limit)
 

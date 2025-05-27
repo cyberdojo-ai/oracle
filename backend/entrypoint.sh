@@ -103,6 +103,6 @@ if [[ -n "$START_ENRICHMENT" ]]; then
 fi
 
 # Start the API server
-echo "Starting the API server on port $PORT with $WORKERS workers"
+echo "Starting the API server"
 
 exec python api-server.py

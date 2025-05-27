@@ -109,21 +109,25 @@ async def search_sources(
         )
         validated_sources.append(model)
     
-    # deduplicate sources by id with average distance
-    unique_sources: dict[int, schemas.SourceWithDistance] = {}
+    # deduplicate sources by id and compute average distance correctly
+    distance_accumulator: dict[int, tuple[schemas.SourceWithDistance, float, int]] = {}
     for source in validated_sources:
-        if source.id not in unique_sources:
-            unique_sources[source.id] = source
+        if source.id not in distance_accumulator:
+            distance_accumulator[source.id] = (source, source.distance, 1)
         else:
-            existing_source = unique_sources[source.id]
-            # Average the distances
-            new_distance = (existing_source.distance + source.distance) / 2
-            unique_sources[source.id] = schemas.SourceWithDistance(
-                **existing_source.model_dump(exclude="distance"), distance=new_distance
-            )
-    # Convert to list
-    validated_sources = list(unique_sources.values())
+            existing_source, total_distance, count = distance_accumulator[source.id]
+            distance_accumulator[source.id] = (existing_source, total_distance + source.distance, count + 1)
+
+    # Compute average distance for each unique source
+    unique_sources: list[schemas.SourceWithDistance] = []
+    for source_id, (source, total_distance, count) in distance_accumulator.items():
+        avg_distance = total_distance / count
+        unique_sources.append(schemas.SourceWithDistance(
+            **source.model_dump(exclude="distance"), distance=avg_distance
+        ))
+    # Sort by distance
+    unique_sources.sort(key=lambda x: x.distance)
     # Apply the limit
-    validated_sources = validated_sources[:limit]
+    validated_sources = unique_sources[:limit]
 
     return validated_sources
