@@ -17,7 +17,7 @@ class SansEduScraper:
     Basic web scraper for https://isc.sans.edu/diaryarchive.html using httpx and BeautifulSoup.
     """
 
-    source_type = "Sans - Internet Storm Center"
+    source_type = "SANS - Internet Storm Center"
 
     def __init__(
         self,
@@ -82,37 +82,45 @@ class SansEduScraper:
         self.sources: list[schemas.SourceCreate] = []
         async with httpx.AsyncClient() as client:
             for url in urls:
-                response = await client.get(url)
-                response.raise_for_status()
-                diary_content = response.text
-                # Process diary content as needed
-                print(f"Fetched diary from - {url}")
-                soup = BeautifulSoup(diary_content, "html.parser")
-                article = soup.find("article")
-                title = article.find("h1").text
-                content = article.find("div", class_="diarybody").text.lstrip()
-                diary_header = article.find("div", class_="diaryheader").text
                 try:
-                    published_date_match = re.search(r"Published:\s*(\d{4}-\d{2}-\d{2})", diary_header)
-                    published_date: date | None = date.fromisoformat(published_date_match.group(1)) if published_date_match else None
-                except ValueError:
-                    published_date = None
+                    response = await client.get(url)
+                    response.raise_for_status()
+                    diary_content = response.text
+                    # Process diary content as needed
+                    print(f"Fetched diary from - {url}")
+                    soup = BeautifulSoup(diary_content, "html.parser")
+                    article = soup.find("article")
+                    if not article:
+                        print(f"No article found in {url}. Skipping...")
+                        continue
+                    title = article.find("h1").text
+                    content = article.find("div", class_="diarybody").text.lstrip()
+                    diary_header = article.find("div", class_="diaryheader").text
+                    try:
+                        published_date_match = re.search(r"Published:\s*(\d{4}-\d{2}-\d{2})", diary_header)
+                        published_date: date | None = date.fromisoformat(published_date_match.group(1)) if published_date_match else None
+                    except ValueError:
+                        published_date = None
 
-                try:
-                    updated_on_match = re.search(r"Last Updated:\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w+)", diary_header)
-                    updated_on: datetime | None = datetime.strptime(updated_on_match.group(1), "%Y-%m-%d %H:%M:%S %Z") if updated_on_match else None
-                except ValueError:
-                    updated_on = None
+                    try:
+                        updated_on_match = re.search(r"Last Updated:\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w+)", diary_header)
+                        updated_on: datetime | None = datetime.strptime(updated_on_match.group(1), "%Y-%m-%d %H:%M:%S %Z") if updated_on_match else None
+                    except ValueError:
+                        updated_on = None
 
-                self.sources.append(schemas.SourceCreate(
-                    type=self.source_type,
-                    title=title,
-                    url=url,
-                    content=content,
-                    fetched_on=utils.current_utc_time(),
-                    published_on=published_date,
-                    updated_on=updated_on,
-                ))
+                    self.sources.append(schemas.SourceCreate(
+                        type=self.source_type,
+                        title=title,
+                        url=url,
+                        content=content,
+                        fetched_on=utils.current_utc_time(),
+                        published_on=published_date,
+                        updated_on=updated_on,
+                    ))
+                except httpx.HTTPStatusError as e:
+                    print(f"Failed to fetch {url}: {e}")
+                except Exception as e:
+                    print(f"An error occurred while fetching {url}: {e}")
         return self.sources
 
     async def run(
@@ -176,6 +184,27 @@ async def persist_sources(
                 ),
             )
 
+async def crawl_and_persist(
+    db_session: AsyncSession,
+    enrichment_job_id: int,
+    query_params: dict[str, int | str] = {},
+):
+
+    sans_scraper = SansEduScraper(
+        query_params=query_params,
+    )
+    await sans_scraper.run(db_session)
+
+    sources: list[schemas.SourceCreate] = sans_scraper.sources
+    if not sources:
+        print("No new sources found.")
+    else:
+        await persist_sources(
+            db_session,
+            enrichment_job_id=enrichment_job_id,
+            sources=sources,
+        )
+
 async def enrichment_job_async(
     name: str,
     description: str,
@@ -204,84 +233,47 @@ async def enrichment_job_async(
     current_time = utils.current_utc_time()
     if this_year:
         for i in range(1, current_time.month + 1):
-            sans_scraper = SansEduScraper(
+            await crawl_and_persist(
+                db_session,
+                enrichment_job_id=db_job.id,
                 query_params={
                     "year": current_time.year,
                     "month": i,
                 },
             )
-            await sans_scraper.run(db_session)
-
-            sources: list[schemas.SourceCreate] = sans_scraper.sources
-            if not sources:
-                print("No new sources found.")
-            else:
-                await persist_sources(
-                    db_session,
-                    enrichment_job_id=db_job.id,
-                    sources=sources,
-                )
 
     if last_year:
         for i in range(1, 13):
-            sans_scraper = SansEduScraper(
+            await crawl_and_persist(
+                db_session,
+                enrichment_job_id=db_job.id,
                 query_params={
                     "year": current_time.year - 1,
                     "month": i,
                 },
             )
-            await sans_scraper.run(db_session)
-
-            sources: list[schemas.SourceCreate] = sans_scraper.sources
-            if not sources:
-                print("No new sources found.")
-            else:
-                await persist_sources(
-                    db_session,
-                    enrichment_job_id=db_job.id,
-                    sources=sources,
-                )
 
     if this_month:
-        sans_scraper = SansEduScraper(
+        await crawl_and_persist(
+            db_session,
+            enrichment_job_id=db_job.id,
             query_params={
                 "year": current_time.year,
                 "month": current_time.month,
             },
         )
-        await sans_scraper.run(db_session)
-
-
-        sources: list[schemas.SourceCreate] = sans_scraper.sources
-        if not sources:
-            print("No new sources found.")
-        else:
-            await persist_sources(
-                db_session,
-                enrichment_job_id=db_job.id,
-                sources=sources,
-            )
-
+        
     if last_month:
         query_params = {
             "year": current_time.year if current_time.month > 1 else current_time.year - 1,
             "month": current_time.month - 1 if current_time.month > 1 else 12,
         }
-        sans_scraper = SansEduScraper(
+        await crawl_and_persist(
+            db_session,
+            enrichment_job_id=db_job.id,
             query_params=query_params,
         )
-        await sans_scraper.run(db_session)
-
-        sources: list[schemas.SourceCreate] = sans_scraper.sources
-        if not sources:
-            print("No new sources found.")
-        else:
-            await persist_sources(
-                db_session,
-                enrichment_job_id=db_job.id,
-                sources=sources,
-            )
-
+        
     db_job = await crud.async_base_update_enrichment_job(
         db_session,
         db_job,

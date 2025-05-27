@@ -67,6 +67,12 @@ class SourceEmbedding(SourceEmbeddingBase):
     id: int
     source: Source
 
+class SourceEmbeddingWithDistance(SourceEmbedding):
+    distance: float
+
+class SourceWithDistance(Source):
+    distance: float
+
 class IOCBase(BaseModel):
     value: str
     tags: Optional[List[str]] = Field(default_factory=list)

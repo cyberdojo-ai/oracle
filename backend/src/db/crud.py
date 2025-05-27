@@ -1,5 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
+from sqlalchemy import select, func, asc, desc
+from pgvector.sqlalchemy import Vector
 from datetime import datetime
 
 from . import models, schemas
@@ -47,6 +49,8 @@ async def async_base_get_source(
     urls: list[str] | None = None,
     published_after: datetime | None = None,
     published_before: datetime | None = None,
+    updated_after: datetime | None = None,  # NEW
+    updated_before: datetime | None = None, # NEW
     order_by: str | None = None,
     asc: bool = False,
     offset: int = 0,
@@ -73,6 +77,10 @@ async def async_base_get_source(
         stmt = stmt.filter(models.Source.published_on > published_after)
     if published_before:
         stmt = stmt.filter(models.Source.published_on < published_before)
+    if updated_after:
+        stmt = stmt.filter(models.Source.updated_on > updated_after)
+    if updated_before:
+        stmt = stmt.filter(models.Source.updated_on < updated_before)
 
     if order_by:
         if asc:
@@ -87,6 +95,29 @@ async def async_base_get_source(
 
     res = await db.execute(stmt)
     return res.scalars().all()
+
+### Source Embedding ###
+async def async_similarity_search_source_embedding(
+    db: AsyncSession,
+    query_embedding: list[float],
+    limit: int = 10,
+) -> list[tuple[models.SourceEmbedding, float]]:
+    """
+    Perform a vector search on the source embeddings using cosine similarity.
+    """
+    stmt = select(
+        models.SourceEmbedding,
+        models.SourceEmbedding.embedding.cosine_distance(query_embedding).label("distance")
+    )
+    stmt = stmt.order_by(desc("distance"))
+    if limit > 0:
+        stmt = stmt.limit(limit)
+
+    stmt = stmt.options(selectinload(models.SourceEmbedding.source))
+
+    res = await db.execute(stmt)
+    return res.all()
+    
 
 ### Update operations ###
 
