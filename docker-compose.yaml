@@ -24,6 +24,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - oracle
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: "" # Setting this to an empty string will use current host
     restart: unless-stopped
 
   api-server:

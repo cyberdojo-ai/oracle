@@ -6,10 +6,14 @@ import SourcesList from "./SourcesList";
 import { useSearchParams } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 
-const PAGE_SIZE = 9;
-const API_URL = "/api/source";
+interface SourcesViewProps {
+  apiBaseUrl: string;
+}
 
-const SourcesView: React.FC = () => {
+const PAGE_SIZE = 9;
+
+const SourcesView: React.FC<SourcesViewProps> = ({ apiBaseUrl }) => {
+  const API_URL = `${apiBaseUrl}/api/source`;
   const [sources, setSources] = useState<SourcePreviewProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +87,7 @@ const SourcesView: React.FC = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [page, debouncedSearch, buildApiParams]);
+  }, [page, debouncedSearch, buildApiParams, API_URL]);
 
   useEffect(() => {
     const params = buildApiParams();
@@ -94,7 +98,7 @@ const SourcesView: React.FC = () => {
       })
       .then((data) => setTotal(data.count || 0))
       .catch(() => setTotal(0));
-  }, [debouncedSearch, page, buildApiParams]);
+  }, [debouncedSearch, page, buildApiParams, API_URL]);
 
   // Refetch handler
   const handleRefetch = () => {
