@@ -2,7 +2,8 @@
 
 Oracle continuously scans the internet for Indicators of Compromise (IOCs), aggregates and stores them in a high-performance vector database, and leverages Generative AI to analyze patterns, correlate threats, and generate proactive threat-hunting hypotheses.
 
-# Hosted oracle
+# Oracle MCP Server
+
 Oracle MCP server is hosted at [https://oracle.cyberdojo.ai/sse](https://oracle.cyberdojo.ai/sse). you can sue any MCP client to connect to oracle MCP server.
 
 ## Using Anthropic Claude Desktop
@@ -13,11 +14,11 @@ You can use any client to MCP client to access oracle MCP server. Follow the fol
 
 ![](img/mcp-client-1.png)
 
-3. Then go to Developer -> Edit Config
+3. Go to Developer -> Edit Config:
 
 ![](img/mcp-client-2.png)
 
-4. Then use the following JSON in your configuration file
+4. Use the following JSON for your configuration file:
 
 ```json
 {
@@ -33,7 +34,8 @@ You can use any client to MCP client to access oracle MCP server. Follow the fol
 }
 ```
 
-5. Enjoy fetching threats information
+5. Enjoy interrogating threat information:
+
 ![](img/mcp-client-3.png)
 
 # Local Installation
