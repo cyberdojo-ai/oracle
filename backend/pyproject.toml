@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "Oracle"
+version = "0.0.0"
+description = "Oracle is an application that scrapes the web for information about indicators of compromise (IOCs) and provides a REST API for querying the data."
+authors = [
+    "Ahmed Abugharbia <ahmed@cyberdojo.ai>",
+    "Mohanad Abugharbia <mohannad@cyberdojo.ai>",
+]
+maintainers = [
+    "Ahmed Abugharbia <ahmed@cyberdojo.ai>",
+    "Mohanad Abugharbia <mohannad@cyberdojo.ai>",
+]
+readme = "README.md"
+
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.10"
+gevent = "^25.5.1"
+sqlalchemy = "^2.0.40"
+opentelemetry-instrumentation-sqlalchemy = "^0.54b0"
+pydantic = "^2.11.4"
+pydantic-settings = "^2.9.1"
+opentelemetry-api = "^1.33.0"
+opentelemetry-distro = {extras = ["otlp"], version = "^0.54b0"}
+opentelemetry-instrumentation = "^0.54b0"
+opentelemetry-instrumentation-fastapi = "^0.54b0"
+opentelemetry-instrumentation-httpx = "^0.54b0"
+httpx = "^0.28.1"
+greenlet = "^3.2.2"
+uvicorn = "^0.34.2"
+psycopg = "^3.2.9"
+fastapi = "^0.115.12"
+bs4 = "^0.0.2"
+alembic = "^1.15.2"
+openai = "^1.82.0"
+pgvector = "^0.4.1"
+mcp = "^1.9.1"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+mcp = {extras = ["cli"], version = "^1.9.1"}
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+# https://docs.pytest.org/en/8.3.x/reference/reference.html
+# --strict-config       any warnings encountered while parsing the `pytest`
+#                       section of the configuration file raise errors.
+
+addopts = "--strict-config --cov=src"
+console_output_style = "count"
