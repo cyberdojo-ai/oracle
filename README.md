@@ -9,7 +9,13 @@ Oracle MCP server is hosted at [https://oracle.cyberdojo.ai/sse](https://oracle.
 You can use any client to MCP client to access oracle MCP server. Follow the following steps to configure Claude Desktop:
 
 1. Download and install Claude Desktop at [https://claude.ai/download](https://claude.ai/download)
-2. Go to Settings -> Developer -> Edit Config. Then use the following JSON in your configuration file
+2. Go to Settings:
+![](img/mcp-client-1.png)
+
+3. Then go to Developer -> Edit Config. 
+![](img/mcp-client-2.png)
+
+4. Then use the following JSON in your configuration file
 
 ```json
 {
