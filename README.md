@@ -4,7 +4,7 @@ Oracle continuously scans the internet for Indicators of Compromise (IOCs), aggr
 
 # oracle MCP Server
 
-Oracle MCP server is hosted at [https://oracle.cyberdojo.ai/sse](https://oracle.cyberdojo.ai/sse). you can sue any MCP client to connect to oracle MCP server.
+Oracle MCP server is hosted at [https://oracle.cyberdojo.ai/sse](https://oracle.cyberdojo.ai/sse). you can use any MCP client to connect to oracle MCP server.
 
 ## Using Anthropic Claude Desktop
 You can use any client to MCP client to access oracle MCP server. Follow the following steps to configure Claude Desktop:
