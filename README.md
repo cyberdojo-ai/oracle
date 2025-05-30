@@ -2,7 +2,7 @@
 
 Oracle continuously scans the internet for Indicators of Compromise (IOCs), aggregates and stores them in a high-performance vector database, and leverages Generative AI to analyze patterns, correlate threats, and generate proactive threat-hunting hypotheses.
 
-# Oracle MCP Server
+# oracle MCP Server
 
 Oracle MCP server is hosted at [https://oracle.cyberdojo.ai/sse](https://oracle.cyberdojo.ai/sse). you can sue any MCP client to connect to oracle MCP server.
 
@@ -40,7 +40,7 @@ You can use any client to MCP client to access oracle MCP server. Follow the fol
 
 # Local Installation
 
-To lunch oracle, you will need to use docker compose. Execute the following command:
+To lunch oracle locally, you will need to use docker compose. Execute the following command:
 
 ```bash
 docker compose up -d
