@@ -11,7 +11,7 @@ You can use any client to MCP client to access oracle MCP server. Follow the fol
 1. Download and install Claude Desktop at [https://claude.ai/download](https://claude.ai/download)
 2. Go to Settings:
 
-![](img/mcp-client-1.png){ width=300px }
+![](img/mcp-client-1.png):{ width=300px }
 
 1. Then go to Developer -> Edit Config. 
 ![](img/mcp-client-2.png)
