@@ -8,7 +8,7 @@ interface NavbarProps {
   appName: string;
   environment?: EnvType;
   faroUrl?: string | undefined;
-  faroTraceHeaderCorsUrls?: RegExp[] | undefined;
+  faroTraceHeaderCorsUrls?: string[] | undefined;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -25,7 +25,9 @@ const Navbar: React.FC<NavbarProps> = ({
         url: faroUrl,
         name: appName,
         environment: environment,
-        propagateTraceHeaderCorsUrls: faroTraceHeaderCorsUrls || [
+        propagateTraceHeaderCorsUrls: faroTraceHeaderCorsUrls
+          ? faroTraceHeaderCorsUrls.map((url) => new RegExp(url))
+          : [
           new RegExp("http://localhost:*"),
           new RegExp("http://127.0.0.1:*")
         ]

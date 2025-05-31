@@ -7,7 +7,7 @@ export type Env = {
     environment: EnvType;
     
     faroUrl?: string | undefined;
-    faroTraceHeaderCorsUrls?: RegExp[] | undefined;
+    faroTraceHeaderCorsUrls?: string[] | undefined;
 };
 
 export default function getEnv(): Env {
@@ -17,7 +17,7 @@ export default function getEnv(): Env {
     
     const faroUrl = process.env.NEXT_PUBLIC_FARO_URL;
     const faroTraceHeaderCorsUrls = process.env.NEXT_PUBLIC_FARO_TRACE_HEADER_CORS_URLS
-        ? process.env.NEXT_PUBLIC_FARO_TRACE_HEADER_CORS_URLS.split(",").map(url => new RegExp(url.trim()))
+        ? process.env.NEXT_PUBLIC_FARO_TRACE_HEADER_CORS_URLS.split(",")
         : undefined;
 
     return {
