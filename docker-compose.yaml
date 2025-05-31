@@ -26,6 +26,8 @@ services:
       - oracle
     environment:
       NEXT_PUBLIC_API_BASE_URL: "" # Setting this to an empty string will use current host
+    env_file:
+      - .env.frontend
     restart: unless-stopped
 
   api-server:
@@ -45,6 +47,8 @@ services:
       ORACLE_PG_PASS: ${POSTGRES_PASSWORD:-postgres}
       ORACLE_PG_DB: ${POSTGRES_DEFAULT_DB:-oracle}
       ORACLE_OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ORACLE_ENABLE_ALL_TELEMETRY: ${ORACLE_API_ENABLE_ALL_TELEMETRY:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     command:
      - start_api
 
@@ -65,6 +69,8 @@ services:
       ORACLE_PG_PASS: ${POSTGRES_PASSWORD:-postgres}
       ORACLE_PG_DB: ${POSTGRES_DEFAULT_DB:-oracle}
       ORACLE_OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ORACLE_ENABLE_ALL_TELEMETRY: ${ORACLE_MCP_ENABLE_ALL_TELEMETRY:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
     command:
       - start_mcp
 
@@ -101,8 +107,31 @@ services:
       - 127.0.0.1:8080:80
     volumes:
       - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  alloy:
+    image: grafana/alloy:latest
+    command:
+      - "run"
+      - "--storage.path=/var/lib/alloy/data"
+      - "/etc/alloy/config.alloy"
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${GRAFANA_ENDPOINT}
+      GRAFANA_USERNAME: ${GRAFANA_USERNAME}
+      GRAFANA_PASSWORD: ${GRAFANA_PASSWORD}
+    networks:
+      oracle:
+        aliases:
+          - otel-collector
+    restart: unless-stopped
+    ports:
+      - 4318:4318
+    volumes:
+      - ./config/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+
 volumes:
   pg_16_data:
+  alloy_data:
 
 networks:
   oracle:

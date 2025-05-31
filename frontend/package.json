@@ -9,13 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@grafana/faro-web-sdk": "^1.18.2",
+    "@grafana/faro-web-tracing": "^1.18.2",
     "lucide-react": "^0.511.0",
     "next": "15.3.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "require-in-the-middle": "^7.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@grafana/faro-webpack-plugin": "^0.5.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
