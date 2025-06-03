@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Any, Coroutine, Literal, Callable, Awaitable
 import gevent
 from typing import TypeVar
+import signal
 
 class AllMatch(set):
     """Universal set - match everything"""
@@ -89,11 +90,20 @@ class CronTab(object):
         job = gevent.spawn_later(s1, self._check)
 
     def run(self) -> None:
-        """Run the cron forever"""
+        """Run the cron forever, exit gracefully on SIGTERM"""
+        stop = False
+        def handle_sigterm(signum, frame):
+            nonlocal stop
+            print("\nCronTab received SIGTERM. Exiting gracefully.")
+            stop = True
+        signal.signal(signal.SIGTERM, handle_sigterm)
 
+        print("CronTab started.")
         self._check()
-        while True:
+        while not stop:
             gevent.sleep(60)
+
+        print("CronTab stopped.")
 
 default_crontab = CronTab()
 
