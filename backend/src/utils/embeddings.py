@@ -2,10 +2,13 @@ import asyncio
 from pydantic import BaseModel
 from openai import OpenAI
 from openai import AsyncOpenAI
+from opentelemetry import trace
 import os
 
 from src.config import config
 
+
+tracer = trace.get_tracer(__name__)
 
 openai_client: OpenAI | None = None
 async_openai_client: AsyncOpenAI | None = None
@@ -13,7 +16,7 @@ async_openai_client: AsyncOpenAI | None = None
 default_embedding_model = "text-embedding-3-small"
 
 ### Helper functions for OpenAI embeddings ###
-
+@tracer.start_as_current_span("get_openai_client")
 def get_openai_client() -> OpenAI:
     """
     Create and return an OpenAI client instance.
@@ -24,6 +27,7 @@ def get_openai_client() -> OpenAI:
         openai_client = OpenAI(api_key=config.openai_api_key if config.openai_api_key else os.getenv("OPENAI_API_KEY"))
     return openai_client
 
+@tracer.start_as_current_span("get_async_openai_client")
 async def get_async_openai_client() -> AsyncOpenAI:
     """
     Create and return an asynchronous OpenAI client instance.
@@ -36,6 +40,7 @@ async def get_async_openai_client() -> AsyncOpenAI:
 
 
 ### Exported functions ###
+@tracer.start_as_current_span("get_embedding")
 def get_embedding(text: str, model: str = default_embedding_model) -> list[float]:
     """
     Get the embedding for a given text using OpenAI's API.
@@ -54,6 +59,7 @@ def get_embedding(text: str, model: str = default_embedding_model) -> list[float
     )
     return response.data[0].embedding
 
+@tracer.start_as_current_span("get_embeddings")
 def get_embeddings(texts: list[str], model: str = default_embedding_model) -> list[list[float]]:
     """
     Get embeddings for a list of texts using OpenAI's API.
@@ -70,6 +76,7 @@ def get_embeddings(texts: list[str], model: str = default_embedding_model) -> li
     )
     return [data.embedding for data in response.data]
 
+@tracer.start_as_current_span("async_get_embedding")
 async def async_get_embedding(text: str, model: str = default_embedding_model) -> list[float]:
     """
     Asynchronously get the embedding for a given text using OpenAI's API.
@@ -87,6 +94,8 @@ async def async_get_embedding(text: str, model: str = default_embedding_model) -
         model=model
     )
     return response.data[0].embedding
+
+@tracer.start_as_current_span("async_get_embeddings")
 async def async_get_embeddings(texts: list[str], model: str = default_embedding_model) -> list[list[float]]:
     """
     Asynchronously get embeddings for a list of texts using OpenAI's API.
@@ -107,6 +116,7 @@ class EmbeddingChunk(BaseModel):
     chunk: str
     embedding: list[float]
 
+@tracer.start_as_current_span("chunk_and_embed")
 def chunk_and_embed(
     text: str,
     chunk_size: int = 1000,
@@ -132,13 +142,13 @@ def chunk_and_embed(
         end = min(start + chunk_size, len(text))
         chunks.append(text[start:end])
         start += chunk_size - overlap
-    
+
     # Get embeddings for each chunk
     embeddings = get_embeddings(chunks, model=model)
-    
+
     return [EmbeddingChunk(chunk=chunk, embedding=embedding) for chunk, embedding in zip(chunks, embeddings)]
 
-
+@tracer.start_as_current_span("chunk_and_embed_list")
 async def async_chunk_and_embed(
     text: str,
     chunk_size: int = 1000,
@@ -165,12 +175,13 @@ async def async_chunk_and_embed(
         end = min(start + chunk_size, len(text))
         chunks.append(text[start:end])
         start += chunk_size - overlap
-    
+
     # Get embeddings for each chunk
     embeddings = await async_get_embeddings(chunks, model=model)
-    
+
     return [EmbeddingChunk(chunk=chunk, embedding=embedding) for chunk, embedding in zip(chunks, embeddings)]
 
+@tracer.start_as_current_span("async_chunk_and_embed_list")
 async def async_chunk_and_embed_list(
     texts: list[str],
     chunk_size: int = 1000,
