@@ -9,6 +9,8 @@ from src.utils.metrics import setup_metrics
 
 
 # Initialize tracing and metrics
+config.application_name = config.application_name + " - API"
+
 tracer = setup_tracing()
 meter = setup_metrics()
 

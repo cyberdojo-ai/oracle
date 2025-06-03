@@ -3,8 +3,12 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy import select, func, asc, desc
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
+from opentelemetry import trace
 
 from . import models, schemas
+
+tracer = trace.get_tracer(__name__)
+
 
 ### Read operations ###
 
@@ -97,6 +101,7 @@ async def async_base_get_source(
     return res.scalars().all()
 
 ### Source Embedding ###
+@tracer.start_as_current_span("async_similarity_search_source_embedding")
 async def async_similarity_search_source_embedding(
     db: AsyncSession,
     query_embedding: list[float],
@@ -117,7 +122,7 @@ async def async_similarity_search_source_embedding(
 
     res = await db.execute(stmt)
     return res.all()
-    
+
 
 ### Update operations ###
 
