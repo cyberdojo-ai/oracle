@@ -2,6 +2,7 @@ from warnings import warn
 from mcp.server import FastMCP
 from opentelemetry import trace
 from datetime import datetime, date, timedelta, time
+import json
 
 from src.config import config
 from src.db import schemas, crud
@@ -21,7 +22,7 @@ app = FastMCP()
 
 
 @app.tool()
-async def get_today_sources() -> list[schemas.Source]:
+async def get_today_sources() -> str:
     """
         Retrieves a list of sources that have been published or updated today. This tool helps you quickly access all sources relevant to the current day. These sources may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
@@ -53,12 +54,13 @@ async def get_today_sources() -> list[schemas.Source]:
         for s in updated_sources:
             all_sources[s.id] = s
         # Convert to schemas.Source
-        return [schemas.Source.model_validate(s) for s in all_sources.values()]
+        return json.dumps([schemas.Source.model_validate(s) for s in all_sources.values()])
 
 @app.tool()
 async def get_last_n_days_sources(
     last_n_days: int = 7
-) -> list[schemas.Source]:
+) -> str:
+
     """
         Retrieves a list of sources that have been published or updated within the last n days. This tool helps you quickly access all sources relevant to the current day. These sources may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
@@ -91,7 +93,7 @@ async def get_last_n_days_sources(
         for s in updated_sources:
             all_sources[s.id] = s
         # Convert to schemas.Source
-        return [schemas.Source.model_validate(s) for s in all_sources.values()]
+        return json.dumps([schemas.Source.model_validate(s) for s in all_sources.values()])
 
 
 
@@ -99,7 +101,7 @@ async def get_last_n_days_sources(
 async def search_sources(
     query: str,
     limit: int = 10
-) -> list[schemas.SourceWithDistance]:
+) -> str:
     """
         Searches for sources based on a query string. This tool helps you find sources that match specific keywords or phrases, which may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
@@ -147,4 +149,4 @@ async def search_sources(
         # Apply the limit
         validated_sources = unique_sources[:limit]
 
-        return validated_sources
+        return json.dumps(validated_sources)
