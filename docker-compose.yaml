@@ -49,6 +49,7 @@ services:
       ORACLE_OPENAI_API_KEY: ${OPENAI_API_KEY}
       ORACLE_ENABLE_ALL_TELEMETRY: ${ORACLE_API_ENABLE_ALL_TELEMETRY:-false}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      ORACLE_ENVIRONMENT: ${ORACLE_ENVIRONMENT:-development}
     command:
      - start_api
 
@@ -71,6 +72,7 @@ services:
       ORACLE_OPENAI_API_KEY: ${OPENAI_API_KEY}
       ORACLE_ENABLE_ALL_TELEMETRY: ${ORACLE_MCP_ENABLE_ALL_TELEMETRY:-false}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      ORACLE_ENVIRONMENT: ${ORACLE_ENVIRONMENT:-development}
     command:
       - start_mcp
 
@@ -91,6 +93,7 @@ services:
       ORACLE_PG_PASS: ${POSTGRES_PASSWORD:-postgres}
       ORACLE_PG_DB: ${POSTGRES_DEFAULT_DB:-oracle}
       ORACLE_OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ORACLE_ENVIRONMENT: ${ORACLE_ENVIRONMENT:-development}
     command:
       - start_enrichment
 
