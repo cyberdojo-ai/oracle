@@ -93,7 +93,7 @@ async def get_last_n_days_sources(
         for s in updated_sources:
             all_sources[s.id] = s
         # Convert to schemas.Source
-        return [schemas.Source.model_validate(s).du for s in all_sources.values()]
+        return [schemas.Source.model_validate(s) for s in all_sources.values()]
 
 
 
