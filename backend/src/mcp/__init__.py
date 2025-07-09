@@ -103,7 +103,7 @@ async def search_sources(
     limit: int = 10
 ) -> str:
     """
-        Searches for sources based on a query string. This tool helps you find sources that match specific keywords or phrases, which may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
+        Performs a similarity search on the source embeddings to find relevant sources based on a query string. This tool helps you find sources that are similiar to the query, which may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
     with tracer.start_as_current_span("search_sources") as span:
         span.set_attribute("query", query)
