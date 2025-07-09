@@ -22,7 +22,7 @@ app = FastMCP()
 
 
 @app.tool()
-async def get_today_sources() -> str:
+async def get_today_sources() -> list[schemas.Source]:
     """
         Retrieves a list of sources that have been published or updated today. This tool helps you quickly access all sources relevant to the current day. These sources may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
@@ -54,12 +54,12 @@ async def get_today_sources() -> str:
         for s in updated_sources:
             all_sources[s.id] = s
         # Convert to schemas.Source
-        return json.dumps([schemas.Source.model_validate(s) for s in all_sources.values()])
+        return [schemas.Source.model_validate(s) for s in all_sources.values()]
 
 @app.tool()
 async def get_last_n_days_sources(
     last_n_days: int = 7
-) -> str:
+) -> list[schemas.Source]:
 
     """
         Retrieves a list of sources that have been published or updated within the last n days. This tool helps you quickly access all sources relevant to the current day. These sources may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
@@ -93,7 +93,7 @@ async def get_last_n_days_sources(
         for s in updated_sources:
             all_sources[s.id] = s
         # Convert to schemas.Source
-        return json.dumps([schemas.Source.model_validate(s) for s in all_sources.values()])
+        return [schemas.Source.model_validate(s).du for s in all_sources.values()]
 
 
 
@@ -101,7 +101,7 @@ async def get_last_n_days_sources(
 async def search_sources(
     query: str,
     limit: int = 10
-) -> str:
+) -> list[schemas.SourceWithDistance]:
     """
         Performs a similarity search on the source embeddings to find relevant sources based on a query string. This tool helps you find sources that are similiar to the query, which may contain possible Indicators of Compromise (IOCs) useful for threat detection and response.
     """
@@ -149,4 +149,4 @@ async def search_sources(
         # Apply the limit
         validated_sources = unique_sources[:limit]
 
-        return json.dumps(validated_sources)
+        return validated_sources
